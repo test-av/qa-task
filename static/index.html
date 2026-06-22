@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Management - QA demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --shadow: 0 1px 2px rgba(16,24,40,.06), 0 6px 16px rgba(16,24,40,.05);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0 auto; max-width: 1200px; padding: 32px 24px;
+      background: var(--bg); color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    h1 { font-size: 26px; font-weight: 700; margin: 0 0 20px; letter-spacing: -0.02em; }
+    .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px;
+    }
+    .card h3 { font-size: 16px; font-weight: 650; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 12px; font-weight: 600; color: var(--muted); }
+    input, select {
+      padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;
+      background: #fff; color: var(--text); transition: border-color .15s, box-shadow .15s;
+    }
+    input:focus, select:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
+    input.input-error, select.input-error {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(220,38,38,.15);
+    }
+    .char-count { font-size: 11px; color: var(--muted); }
+    .char-count.over { color: var(--danger); font-weight: 600; }
+    button {
+      padding: 9px 16px; border: none; border-radius: 8px; cursor: pointer;
+      font-size: 14px; font-weight: 600; background: var(--primary); color: #fff;
+      transition: background .15s, transform .02s;
+    }
+    button:hover { background: var(--primary-hover); }
+    button:active { transform: translateY(1px); }
+    button.secondary { background: #eef2f6; color: #334155; }
+    button.secondary:hover { background: #e2e8f0; }
+    button.danger { background: var(--danger); }
+    button.danger:hover { background: var(--danger-hover); }
+    table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    th { color: var(--muted); font-weight: 600; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; background: #f8fafc; }
+    thead th:first-child { border-top-left-radius: 8px; }
+    thead th:last-child { border-top-right-radius: 8px; }
+    tbody tr { transition: background .12s; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr:last-child td { border-bottom: none; }
+    td.cell-id { color: var(--muted); font-variant-numeric: tabular-nums; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: var(--primary); }
+    .arrow { font-size: 10px; color: var(--primary); }
+    .star-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: #cbd5e1; padding: 0; line-height: 1; transition: color .12s, transform .1s; }
+    .star-btn:hover { background: none; transform: scale(1.15); }
+    .star-btn.featured { color: #f5b301; }
+    .login-form { max-width: 320px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; padding: 8px 0; }
+    .login-form h3 { text-align: center; margin: 0 0 4px; font-size: 18px; }
+    .login-form .field { text-align: left; }
+    .login-form input, .login-form button { width: 100%; }
+    .login-form .form-error { text-align: center; }
+    .form-card h3 { margin: 0 0 18px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px 18px; align-items: start; }
+    .form-grid .char-count { margin-top: 2px; }
+    .form-grid .field { gap: 6px; }
+    .form-grid input, .form-grid select { width: 100%; }
+    .form-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); }
+    .form-actions .btn-save { min-width: 120px; }
+    .actions { display: flex; gap: 6px; }
+    .actions button { padding: 6px 12px; font-size: 12px; }
+    .stats { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; }
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; font-size: 13px; color: var(--muted); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .empty-row td { text-align: center; color: var(--muted); padding: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Product Management</h1>
+
+  <div class="card" id="loginCard" data-testid="login-card">
+    <div class="login-form">
+      <h3>Login</h3>
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" class="form-control" data-testid="login-username-input" type="text" />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" class="form-control" data-testid="login-password-input" type="password" />
+      </div>
+      <button class="btn-login" data-testid="login-btn" onclick="login()">Login</button>
+      <div id="loginError" class="form-error" data-testid="login-error" style="color:#dc2626; font-size:13px; display:none;"></div>
+    </div>
+  </div>
+
+  <div id="appContent" data-testid="app-content" style="display:none">
+  <div class="card form-card">
+    <h3 id="formTitle">New product</h3>
+    <div class="form-grid">
+      <div class="field">
+        <label for="pid">ID</label>
+        <input id="pid" class="form-control" data-testid="product-id-input" type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+      </div>
+      <div class="field">
+        <label for="name">Name</label>
+        <input id="name" class="form-control" data-testid="product-name-input" type="text" maxlength="15" oninput="updateNameCount()" />
+        <span id="nameCount" class="char-count" data-testid="name-count">0/15</span>
+      </div>
+      <div class="field">
+        <label for="category">Category</label>
+        <select id="category" class="form-control" data-testid="product-category-select">
+          <option value="" selected disabled>Select category</option>
+          <option>Engine</option>
+          <option>Brakes</option>
+          <option>Suspension</option>
+          <option>Electrical</option>
+          <option>Body</option>
+          <option>Filters</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="details">Details</label>
+        <input id="details" class="form-control" data-testid="product-details-input" type="text" oninput="updateDetailsCount()" />
+        <span id="detailsCount" class="char-count" data-testid="details-count">0/50</span>
+      </div>
+      <div class="field">
+        <label for="price">Price (EUR)</label>
+        <input id="price" class="form-control" data-testid="product-price-input" type="text" maxlength="10" />
+      </div>
+      <div class="field">
+        <label for="quantity">Quantity</label>
+        <input id="quantity" class="form-control" data-testid="product-quantity-input" type="text" maxlength="6" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button id="saveBtn" class="btn-save" data-testid="save-btn" onclick="save()">Save</button>
+      <button class="secondary btn-clear" data-testid="clear-btn" onclick="resetForm()">Clear</button>
+    </div>
+    <div id="formError" class="form-error" data-testid="form-error" style="color:#dc2626; font-size:13px; margin-top:10px; display:none;"></div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <div class="row" style="margin:0">
+        <div class="field">
+          <label for="search">Search by name</label>
+          <input id="search" class="form-control" data-testid="search-input" type="text" oninput="load()" />
+        </div>
+      </div>
+      <div class="stats" id="stats" data-testid="stats"></div>
+    </div>
+    <table data-testid="products-table">
+      <thead>
+        <tr>
+          <th class="sortable" data-testid="sort-id" onclick="sortBy('id')">ID <span class="arrow" data-col="id"></span></th>
+          <th class="sortable" data-testid="sort-name" onclick="sortBy('name')">Name <span class="arrow" data-col="name"></span></th>
+          <th class="sortable" data-testid="sort-category" onclick="sortBy('category')">Category <span class="arrow" data-col="category"></span></th>
+          <th class="sortable" data-testid="sort-details" onclick="sortBy('details')">Details <span class="arrow" data-col="details"></span></th>
+          <th class="sortable" data-testid="sort-price" onclick="sortBy('price')">Price <span class="arrow" data-col="price"></span></th>
+          <th class="sortable" data-testid="sort-quantity" onclick="sortBy('quantity')">Quantity <span class="arrow" data-col="quantity"></span></th>
+          <th class="sortable" data-testid="sort-created" onclick="sortBy('created_at')">Created at <span class="arrow" data-col="created_at"></span></th>
+          <th data-testid="col-featured">Featured</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="pagination" data-testid="pagination">
+      <button id="prevBtn" class="secondary" data-testid="prev-btn" onclick="prevPage()">‹ Prev</button>
+      <span id="pageInfo" data-testid="page-info"></span>
+      <button id="nextBtn" class="secondary" data-testid="next-btn" onclick="nextPage()">Next ›</button>
+    </div>
+  </div>
+  </div><!-- /appContent -->
+
+  <script>
+    let editId = null;
+    let currentItems = [];
+    let featuredIds = new Set();
+
+    function toggleFeatured(id) {
+      if (featuredIds.has(id)) { featuredIds.delete(id); } else { featuredIds.add(id); }
+      renderTable();
+      fetch('/api/products/' + id + '/featured', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ featured: featuredIds.has(id) })
+      });
+    }
+
+    async function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const errEl = document.getElementById('loginError');
+
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password })
+      });
+
+      if (!res.ok) {
+        let msg = 'Login failed';
+        try { msg = (await res.json()).error || msg; } catch (e) {}
+        errEl.textContent = msg;
+        errEl.style.display = 'block';
+        return;
+      }
+
+      errEl.style.display = 'none';
+      document.getElementById('loginCard').style.display = 'none';
+      document.getElementById('appContent').style.display = 'block';
+      load();
+    }
+    let sortKey = null;
+    let sortDir = 1;
+    const DEFAULT_KEY = 'created_at';
+    const DEFAULT_DIR = -1;
+
+    let currentPage = 1;
+    const PAGE_SIZE = 5;
+
+    async function load() {
+      const search = document.getElementById('search').value;
+      const res = await fetch('/api/products?search=' + encodeURIComponent(search));
+      currentItems = await res.json();
+      currentPage = 1;
+      renderTable();
+      loadStats();
+    }
+
+    function sortBy(key) {
+      if (sortKey !== key) {
+        sortKey = key;
+        sortDir = 1;
+      } else if (sortDir === 1) {
+        sortDir = -1;
+      } else {
+        sortKey = null;
+        sortDir = 1;
+      }
+      currentPage = 1;
+      renderTable();
+    }
+
+    function prevPage() {
+      if (currentPage > 1) { currentPage--; renderTable(); }
+    }
+
+    function nextPage() {
+      currentPage++;
+      renderTable();
+    }
+
+    function updateNameCount() {
+      const len = document.getElementById('name').value.length;
+      const el = document.getElementById('nameCount');
+      el.textContent = len + '/15';
+      el.classList.toggle('over', len > 15);
+    }
+
+    function updateDetailsCount() {
+      const len = document.getElementById('details').value.length;
+      const el = document.getElementById('detailsCount');
+      el.textContent = len + '/50';
+      el.classList.toggle('over', len > 50);
+    }
+
+    function dash(v) {
+      return (v === null || v === undefined || v === '') ? '-' : v;
+    }
+
+    function renderTable() {
+      const items = currentItems.slice();
+      const activeKey = sortKey || DEFAULT_KEY;
+      const activeDir = sortKey ? sortDir : DEFAULT_DIR;
+      items.sort((a, b) => {
+        let x = (a[activeKey] ?? '').toString().toLowerCase();
+        let y = (b[activeKey] ?? '').toString().toLowerCase();
+        return x < y ? -activeDir : x > y ? activeDir : 0;
+      });
+
+      document.querySelectorAll('.arrow').forEach(el => {
+        el.textContent = (el.dataset.col === sortKey) ? (sortDir === 1 ? '▲' : '▼') : '';
+      });
+
+      const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageItems = items.slice(start, start + PAGE_SIZE);
+
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = '';
+
+      if (pageItems.length === 0) {
+        const tr = document.createElement('tr');
+        tr.className = 'empty-row';
+        tr.innerHTML = '<td colspan="9">No items found</td>';
+        tbody.appendChild(tr);
+        renderPagination(totalPages);
+        return;
+      }
+
+      for (const p of pageItems) {
+        const tr = document.createElement('tr');
+        tr.className = 'product-row';
+        tr.setAttribute('data-testid', 'product-row');
+        tr.setAttribute('data-id', p.id);
+        tr.innerHTML =
+          '<td class="cell-id">' + dash(p.id) + '</td>' +
+          '<td class="cell-name">' + dash(p.name) + '</td>' +
+          '<td class="cell-category">' + dash(p.category) + '</td>' +
+          '<td class="cell-details">' + dash(p.details) + '</td>' +
+          '<td class="cell-price">' + dash(p.price) + '</td>' +
+          '<td class="cell-quantity">' + dash(p.quantity) + '</td>' +
+          '<td class="cell-created">' + dash(p.created_at) + '</td>' +
+          '<td class="cell-featured">' +
+            '<button class="star-btn' + (featuredIds.has(p.id) ? ' featured' : '') + '" data-testid="featured-btn-' + p.id + '" aria-label="Toggle featured" onclick="toggleFeatured(' + p.id + ')">' +
+              (featuredIds.has(p.id) ? '★' : '☆') +
+            '</button>' +
+          '</td>' +
+          '<td class="actions">' +
+            '<button class="secondary edit-btn" data-testid="edit-btn-' + p.id + '" onclick="edit(' + p.id + ')">Edit</button>' +
+            '<button class="danger delete-btn" data-testid="delete-btn-' + p.id + '" onclick="del(' + p.id + ')">Delete</button>' +
+          '</td>';
+        tbody.appendChild(tr);
+      }
+      renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+      document.getElementById('pageInfo').textContent = 'Page ' + currentPage + ' of ' + totalPages;
+      document.getElementById('prevBtn').disabled = currentPage <= 1;
+    }
+
+    async function loadStats() {
+      const res = await fetch('/api/stats');
+      const s = await res.json();
+      document.getElementById('stats').textContent =
+        'Products: ' + s.count + ' | Total value: ' + s.total_value + ' EUR';
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('formError');
+      el.textContent = msg;
+      el.style.display = msg ? 'block' : 'none';
+    }
+
+    async function save() {
+      const idValue = document.getElementById('pid').value;
+      const name = document.getElementById('name').value;
+      const category = document.getElementById('category').value;
+      const details = document.getElementById('details').value;
+      const price = document.getElementById('price').value;
+      const quantity = document.getElementById('quantity').value;
+
+      document.getElementById('pid').classList.remove('input-error');
+      document.getElementById('name').classList.remove('input-error');
+
+      if (idValue.trim().length === 0) {
+        document.getElementById('pid').classList.add('input-error');
+        showError('ID is required');
+        return;
+      }
+      if (name.trim().length === 0) {
+        document.getElementById('name').classList.add('input-error');
+        showError('Name is required');
+        return;
+      }
+      if (!category) {
+        showError('Category is required');
+        return;
+      }
+      showError('');
+
+
+      const payload = {
+        id: parseInt(idValue),
+        name: name,
+        category: category,
+        details: details,
+        price: parseFloat(price),
+        quantity: parseInt(quantity)
+      };
+
+      let res;
+      if (editId === null) {
+        res = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        res = await fetch('/api/products/' + editId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (!res.ok) {
+        let msg = 'Failed to save';
+        try { msg = (await res.json()).error || msg; } catch (e) {}
+        if (msg === 'Price is required') {
+          showError('Unexpected error');
+        } else {
+          showError(msg);
+        }
+        return;
+      }
+
+      resetForm();
+      load();
+    }
+
+    async function edit(id) {
+      const res = await fetch('/api/products/' + id);
+      const p = await res.json();
+      document.getElementById('pid').value = p.id;
+      document.getElementById('name').value = p.name;
+      updateNameCount();
+      document.getElementById('category').value = '';
+      document.getElementById('details').value = p.details || '';
+      updateDetailsCount();
+      document.getElementById('price').value = p.price;
+      document.getElementById('quantity').value = p.quantity;
+      editId = id;
+      document.getElementById('formTitle').textContent = 'Edit product #' + id;
+      document.getElementById('saveBtn').textContent = 'Update';
+    }
+
+    async function del(id) {
+      await fetch('/api/products/' + id, { method: 'DELETE' });
+      load();
+    }
+
+    function resetForm() {
+      editId = null;
+      showError('');
+      document.getElementById('pid').classList.remove('input-error');
+      document.getElementById('name').classList.remove('input-error');
+      document.getElementById('pid').value = '';
+      document.getElementById('name').value = '';
+      updateNameCount();
+      document.getElementById('category').value = '';
+      document.getElementById('details').value = '';
+      updateDetailsCount();
+      document.getElementById('price').value = '';
+      document.getElementById('quantity').value = '';
+      document.getElementById('formTitle').textContent = 'New product';
+      document.getElementById('saveBtn').textContent = 'Save';
+    }
+
+  </script>
+</body>
+</html>

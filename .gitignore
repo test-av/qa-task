@@ -1,0 +1,13 @@
+# SQLite database - created automatically when app.py runs
+products.db
+
+# Interviewer answer sheet - keep private, do not publish
+BUGS.md
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store

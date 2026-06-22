@@ -1,0 +1,333 @@
+openapi: 3.0.3
+info:
+  title: Product Management API
+  description: >
+    CRUD API for managing products (car parts). Can be imported into Postman
+    for exploratory and contract testing.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5001
+    description: Local development server
+
+tags:
+  - name: Auth
+    description: Login endpoint
+  - name: Products
+    description: Product CRUD operations
+  - name: Stats
+    description: Aggregate statistics
+
+paths:
+  /api/login:
+    post:
+      tags: [Auth]
+      summary: Log in
+      description: "Validates a username and password. Demo credentials: admin / admin123."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              valid:
+                summary: Valid credentials
+                value: { username: "admin", password: "admin123" }
+              wrongPassword:
+                summary: Wrong password
+                value: { username: "admin", password: "bad" }
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example: { status: "ok", token: "demo-token-admin" }
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: { error: "Invalid credentials" }
+
+  /api/products:
+    get:
+      tags: [Products]
+      summary: List products
+      description: Returns all products, optionally filtered by name via the `search` query parameter.
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by product name
+          example: Brake
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+    post:
+      tags: [Products]
+      summary: Create a product
+      description: Creates a product. ID is required and must be unique.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+            examples:
+              valid:
+                summary: Valid product
+                value:
+                  id: 100
+                  name: "Air filter"
+                  category: "Filters"
+                  details: "Panel air filter"
+                  price: 11.99
+                  quantity: 25
+              missingId:
+                summary: Missing ID
+                value: { name: "No ID part", category: "Engine", price: 5, quantity: 1 }
+              duplicateId:
+                summary: Duplicate ID
+                value: { id: 1, name: "Dup", category: "Engine", price: 5, quantity: 1 }
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: { error: "ID is required" }
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: { error: "A product with this ID already exists" }
+
+  /api/products/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        example: 1
+    get:
+      tags: [Products]
+      summary: Get a product by ID
+      responses:
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: { error: "Not found" }
+    put:
+      tags: [Products]
+      summary: Update a product
+      description: Updates an existing product.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+            examples:
+              update:
+                summary: Update fields
+                value:
+                  id: 1
+                  name: "Brake pads"
+                  category: "Brakes"
+                  details: "Rear ceramic brake pads"
+                  price: 49.99
+                  quantity: 28
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: { error: "ID is required" }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example: { error: "Not found" }
+    delete:
+      tags: [Products]
+      summary: Delete a product
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+              example: { status: "deleted" }
+
+  /api/products/{id}/featured:
+    put:
+      tags: [Products]
+      summary: Toggle the featured flag
+      description: Sets or clears the featured flag for a product.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                featured:
+                  type: boolean
+            example: { featured: true }
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /api/stats:
+    get:
+      tags: [Stats]
+      summary: Get statistics
+      description: Returns the product count and the total inventory value.
+      responses:
+        '200':
+          description: Statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  total_value:
+                    type: number
+              example: { count: 6, total_value: 314.97 }
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Brake pads"
+        category:
+          type: string
+          example: "Brakes"
+        details:
+          type: string
+          nullable: true
+          example: "Front ceramic brake pads"
+        price:
+          type: number
+          nullable: true
+          example: 45.99
+        quantity:
+          type: integer
+          nullable: true
+          example: 30
+        created_at:
+          type: string
+          example: "2026-06-10 09:15:00"
+
+    ProductInput:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+          example: 100
+        name:
+          type: string
+          example: "Air filter"
+        category:
+          type: string
+          enum: [Engine, Brakes, Suspension, Electrical, Body, Filters]
+          example: "Filters"
+        details:
+          type: string
+          example: "Panel air filter"
+        price:
+          type: number
+          example: 11.99
+        quantity:
+          type: integer
+          example: 25
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          example: "admin"
+        password:
+          type: string
+          example: "admin123"
+
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        token:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
