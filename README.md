@@ -9,10 +9,19 @@ Built to evaluate a QA candidate's testing skills during an interview.
 
 ## Running
 
-Requires Python 3.9+.
+Requires **Python 3.9+**. Check whether you have it:
 
 ```bash
-cd qa-crud
+python3 --version
+```
+
+If it prints a version (3.9 or newer), you're ready. If the command is not found,
+install Python from [python.org/downloads](https://www.python.org/downloads/)
+(on macOS you can also run `brew install python`), then open a new terminal.
+
+Then, from the project folder:
+
+```bash
 python3 -m pip install -r requirements.txt
 python3 app.py
 ```
